@@ -12,12 +12,17 @@ library(ggplot2)
 #' How should we parameterise the offsets in this case?
 
 partial_circles <- function(radius) {
-  return(function(angles){
+  return(function(angles, jitter){
     num_points = length(angles)
-    offset = c(rep(0.8, num_points/20), 
-               rep(1.1, num_points/20),
-               rep(0.8, num_points/20),
-               rep(1.1, num_points/20))
+    if (jitter == TRUE){
+      offset = c(rep(0.8, num_points/20), 
+                 rep(1.1, num_points/20),
+                 rep(0.8, num_points/20),
+                 rep(1.1, num_points/20))
+    }else{
+      offset =1
+    }
+    
     x = radius * sin(angles) * offset
     y = radius * cos(angles) * offset
     return(tibble(x = x + (rnorm(1) * rbernoulli(1, 1/radius)),
@@ -31,16 +36,20 @@ partial_circles <- function(radius) {
 #' @author Joe
 #' @export
 partial_spirals <- function(radius) {
-  return(function(angles){
+  return(function(angles, jitter = FALSE){
     num_points = length(angles)
-    offset = c(rep(0.8, num_points/20), 
-               rep(1.1, num_points/20),
-               rep(0.8, num_points/20),
-               rep(1.1, num_points/20))
-    x = radius * sin(angles) * seq(0, 1, length.out = num_points)
-    y = radius * cos(angles) * seq(0, 1, length.out = num_points)
-    return(tibble(x = x + (rnorm(1) * rbernoulli(1, 1/radius)),
-                  y = y + (rnorm(1) * rbernoulli(1, 0.5)),
+    if(jitter == TRUE){
+      spiral_max = abs(rnorm(1))
+    }else{
+      spiral_max = 1
+    }
+    # Coords
+    x = radius * sin(angles) * seq(0, spiral_max, length.out = num_points)
+    y = radius * cos(angles) * seq(0, spiral_max, length.out = num_points)
+    #Rand shift
+    rand_shift <- rnorm(1) * rbernoulli(1, 0.01)
+    return(tibble(x = x + rand_shift,
+                  y = y + rand_shift,
                   radius = radius,
                   point_num = 1:num_points))
   })
@@ -50,8 +59,8 @@ partial_spirals <- function(radius) {
 #' @title create_circles
 #' @author Joe
 #' @export
-create_circles <- function(num_circles = 10, partial_fun){
-  radii <- rnorm(num_circles, 15, 5)
+create_circles <- function(num_circles = 10, mean_rad = 15, partial_fun = partial_spirals){
+  radii <- rnorm(num_circles, mean_rad, 2)
   return(lapply(radii, partial_fun))
 }
 
@@ -64,51 +73,58 @@ null_fun <- function(x){
 }
 
 #' @title build_circle_frame
-build_circle_frame <- function(num_circles = 10, x_fun = null_fun, y_fun = null_fun, 
+build_circle_frame <- function(num_circles = 10, 
+                               x_fun = null_fun, y_fun = null_fun, 
                                seq_min = 0, seq_max = 2*pi, seq_length = 1000, 
+                               mean_rad = 15,
                                partial_fun = partial_spirals){
   
-  circle_builders <- create_circles(num_circles = num_circles)
-  #By default, all our circles have length 1000 points
-  #Can change this in the future. 
+  circle_builders <- create_circles(num_circles = num_circles, 
+                                    mean_rad = mean_rad, 
+                                    partial_fun)
+  wrapping <- function(circle_builder){
+    random_length <- rpois(1, 10)
+    random_max <- rnorm(1, 2, 1)
+    sequence <- seq(seq_min, seq_max + random_max, length.out = seq_length)
+    output <- circle_builder(sequence, jitter = FALSE)
+    return(output)
+  }
   circle_tibbles <- do.call(rbind,
                             lapply(circle_builders, 
-                                   function(x) x(seq(seq_min, seq_max, length.out = seq_length))
+                                   wrapping
                                    )
                             )
   circle_frame <- circle_tibbles %>% 
-    mutate(x = x_fun(x),
-           y = y_fun(y))
+    mutate(x = x ,
+           y = y )
   return(circle_frame)
 }
 
-output1 <- build_circle_frame(num_circles = 50, seq_min = 0, seq_max = pi, seq_length = 500)
-output2 <- build_circle_frame(num_circles = 50, seq_min = pi, seq_max = 3*pi, seq_length = 1000)
-output3 <- build_circle_frame(num_circles = 50, seq_min = pi*2, seq_max = pi*1, seq_length = 500)
-output4 <- build_circle_frame(num_circles = 50, seq_min = pi*7, seq_max = pi*6, seq_length = 500)
+output1 <- build_circle_frame(num_circles = 1, seq_min = 0, seq_max = 3*pi, seq_length = 3000)
+output2 <- build_circle_frame(num_circles = 1, mean_rad = 25, seq_min = pi*0.8, seq_max = 3.2*pi, seq_length = 1000)
+output3 <- build_circle_frame(num_circles = 1, mean_rad = 50, seq_min = 0, seq_max = pi*1, seq_length = 50)
+#output4 <- build_circle_frame(num_circles = 50, seq_min = pi*7, seq_max = pi*6, seq_length = 500)
 
 ggplot()+
   geom_path(data = output1, mapping = aes(x=x, 
                                           y=y,
                                           group = radius,
-                                          colour = point_num*3), alpha = 0.25) +
-  
+                                          colour = radius),
+            alpha = 0.2, size = 0.3) +
   geom_path(data = output2, mapping = aes(x=x, 
-                                          y=y,
-                                          group = radius,
-                                          colour = point_num*3), alpha = 0.2)+
+                                           y=y,
+                                           group = radius,
+                                           colour = radius),
+             alpha = 0.4, size = 0.3) +
   geom_path(data = output3, mapping = aes(x=x, 
                                           y=y,
                                           group = radius,
-                                          colour = point_num*3), alpha = 0.25)+
-  geom_path(data = output4, mapping = aes(x=x, 
-                                          y=y,
-                                          group = radius,
-                                          colour = point_num*3), alpha = 0.1)+
+                                          colour = radius),
+            alpha = 0.9, size = 0.3) +
   
   coord_fixed() +
-  xlim(-30, 30)+
-  ylim(-30, 30)+
+  #xlim(-30, 30)+
+  #ylim(-30, 30)+
   theme_void() + 
   theme(plot.background = element_rect(fill = 'black'), legend.position = 0)
 
