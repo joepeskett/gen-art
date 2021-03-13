@@ -74,7 +74,7 @@ null_fun <- function(x){
 
 #' @title build_circle_frame
 build_circle_frame <- function(num_circles = 10, 
-                               x_fun = null_fun, y_fun = null_fun, 
+                               x_fun = 0, y_fun = 0, 
                                seq_min = 0, seq_max = 2*pi, seq_length = 1000, 
                                mean_rad = 15,
                                partial_fun = partial_spirals){
@@ -95,32 +95,63 @@ build_circle_frame <- function(num_circles = 10,
                                    )
                             )
   circle_frame <- circle_tibbles %>% 
-    mutate(x = x ,
-           y = y )
+    mutate(x = x + x_fun,
+           y = y + y_fun)
   return(circle_frame)
 }
 
-output1 <- build_circle_frame(num_circles = 1, seq_min = 0, seq_max = 3*pi, seq_length = 3000)
-output2 <- build_circle_frame(num_circles = 1, mean_rad = 25, seq_min = pi*0.8, seq_max = 3.2*pi, seq_length = 1000)
-output3 <- build_circle_frame(num_circles = 1, mean_rad = 50, seq_min = 0, seq_max = pi*1, seq_length = 50)
-#output4 <- build_circle_frame(num_circles = 50, seq_min = pi*7, seq_max = pi*6, seq_length = 500)
+output1 <- build_circle_frame(num_circles = 20, mean_rad = 50,
+                              seq_min = 0, seq_max = 3*pi, seq_length = 3000)
+
+output2 <- build_circle_frame(num_circles = 20, mean_rad = 15, 
+                              seq_min = pi*0.8, seq_max = 4.2*pi, seq_length = 1000,
+                              x_fun = tail(output1$x,1), y_fun = tail(output1$y,1))
+
+output3 <- build_circle_frame(num_circles = 20, mean_rad = 40, 
+                              seq_min = 0, seq_max = pi*1, seq_length = 50,
+                              x_fun = tail(output2$x, 1), y_fun = tail(output2$y, 1))
+output4 <- build_circle_frame(num_circles = 20, mean_rad = 30,
+                              seq_min = pi*2, seq_max = pi*7, seq_length = 500,
+                              x_fun = tail(output3$x, 1), y_fun = tail(output3$y, 1))
+
+output5 <- build_circle_frame(num_circles = 20, mean_rad = 40,
+                              seq_min = pi*2, seq_max = pi*5, seq_length = 500,
+                              x_fun = tail(output4$x, 1), y_fun = tail(output4$y, 1))
+output6 <- build_circle_frame(num_circles = 15, mean_rad = 35,
+                              seq_min = pi*2, seq_max = pi*6, seq_length = 500,
+                              x_fun = tail(output5$x, 1), y_fun = tail(output5$y, 1))
 
 ggplot()+
   geom_path(data = output1, mapping = aes(x=x, 
                                           y=y,
                                           group = radius,
                                           colour = radius),
-            alpha = 0.2, size = 0.3) +
+            alpha = 0.1, size = 0.9) +
   geom_path(data = output2, mapping = aes(x=x, 
                                            y=y,
                                            group = radius,
                                            colour = radius),
-             alpha = 0.4, size = 0.3) +
+             alpha = 0.6, size = 0.3) +
   geom_path(data = output3, mapping = aes(x=x, 
                                           y=y,
                                           group = radius,
                                           colour = radius),
-            alpha = 0.9, size = 0.3) +
+            alpha = 0.3, size = 0.6) +
+  geom_path(data = output4, mapping = aes(x=x, 
+                                          y=y,
+                                          group = radius,
+                                          colour = radius),
+            alpha = 0.4, size = 0.7) +
+  geom_path(data = output5, mapping = aes(x=x, 
+                                          y=y,
+                                          group = radius,
+                                          colour = radius),
+            alpha = 0.2, size = 0.5) +
+  geom_path(data = output6, mapping = aes(x=x, 
+                                          y=y,
+                                          group = radius,
+                                          colour = radius),
+            alpha = 0.2, size = 0.4) +
   
   coord_fixed() +
   #xlim(-30, 30)+
