@@ -73,6 +73,14 @@ null_fun <- function(x){
 }
 
 #' @title build_circle_frame
+#' @description Function for building the `circle_frame`. Firstly we create a list of
+#' circle building functions. Next we build a wrapper function for generating vectors
+#' of angles and applying a circle_builder to that vector of angles. This wrapper function
+#' is then applied to all of the circle_builder functions. Outputs for all circles are stacked
+#' into circle frame, where there is the option to move the centre of the spiral/circle using
+#' x_fun or y_fun.
+#' @author Joe
+#' @export
 build_circle_frame <- function(num_circles = 10, 
                                x_fun = 0, y_fun = 0, 
                                seq_min = 0, seq_max = 2*pi, seq_length = 1000, 
@@ -99,6 +107,10 @@ build_circle_frame <- function(num_circles = 10,
            y = y + y_fun)
   return(circle_frame)
 }
+
+
+#====================== Plotting Tests =============
+
 
 output1 <- build_circle_frame(num_circles = 20, mean_rad = 50,
                               seq_min = 0, seq_max = 3*pi, seq_length = 3000)
