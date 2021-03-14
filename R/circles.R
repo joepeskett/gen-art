@@ -126,36 +126,37 @@ ggplot()+
                                           y=y,
                                           group = radius,
                                           colour = radius),
-            alpha = 0.1, size = 0.9) +
+            alpha = 0.3, size = 0.95) +
   geom_path(data = output2, mapping = aes(x=x, 
                                            y=y,
                                            group = radius,
                                            colour = radius),
-             alpha = 0.6, size = 0.3) +
+             alpha = 0.5, size = 0.3) +
   geom_path(data = output3, mapping = aes(x=x, 
                                           y=y,
                                           group = radius,
                                           colour = radius),
-            alpha = 0.3, size = 0.6) +
+            alpha = 0.4, size = 0.7) +
   geom_path(data = output4, mapping = aes(x=x, 
                                           y=y,
                                           group = radius,
                                           colour = radius),
-            alpha = 0.4, size = 0.7) +
+            alpha = 0.5, size = 0.8) +
   geom_path(data = output5, mapping = aes(x=x, 
                                           y=y,
                                           group = radius,
                                           colour = radius),
-            alpha = 0.2, size = 0.5) +
+            alpha = 0.3, size = 0.6) +
   geom_path(data = output6, mapping = aes(x=x, 
                                           y=y,
                                           group = radius,
                                           colour = radius),
-            alpha = 0.2, size = 0.4) +
+            alpha = 0.3, size = 0.5) +
   
   coord_fixed() +
   #xlim(-30, 30)+
   #ylim(-30, 30)+
+  scale_color_gradient2(low = 'red',mid = 'green', high = 'red')+
   theme_void() + 
   theme(plot.background = element_rect(fill = 'black'), legend.position = 0)
 
@@ -181,3 +182,60 @@ ggplot(data = circle)+
   coord_fixed() +
   theme_void() + 
   theme(plot.background = element_rect(fill = 'black'))
+
+
+#======== Plot spirals around a circle ====================
+
+# First we create a set of points around a circle
+
+point_sequence <- seq(0, pi*2, length.out = 25)
+radius = 75
+point_tibble <- tibble(angle = point_sequence,
+                       x = radius * sin(angle),
+                       y = radius * cos(angle))
+ggplot(data = point_tibble,mapping = aes(x = x, y = y)) +
+  geom_point() + coord_fixed()
+
+# Plot a basic spiral 
+
+output1 <- build_circle_frame(num_circles = 15, mean_rad = 15,
+                              seq_min = 0, seq_max = 3*pi, seq_length = 1000)
+
+ggplot(data = output1, mapping = aes(x = x, y = y)) +
+  geom_point() + coord_fixed()
+
+# Build a function for apply 
+
+shift_a_spiral <- function(x_alt, y_alt){
+  output <- output1 %>% mutate(x = x + 0.1*y + x_alt,
+                            y = y + 0.1*x+ y_alt)
+  return(output)
+}
+
+spiral_tibble <- point_tibble %>% 
+  rowwise()%>%
+  mutate(spirals = list(shift_a_spiral(x, y)))
+
+spiral_tibble$spirals
+
+geom_spiral <- function(spiral_table){
+  return(geom_path(data = spiral_table, mapping = aes(x=x, y=y, 
+                                                      group = radius, 
+                                                      colour = radius), 
+                   alpha = 0.3, size = 0.7))
+}
+ggplot()+
+  geom_spiral(spiral_tibble$spirals[[1]])+
+  geom_spiral(spiral_tibble$spirals[[3]])+
+  geom_spiral(spiral_tibble$spirals[[5]])+
+  geom_spiral(spiral_tibble$spirals[[7]])+
+  geom_spiral(spiral_tibble$spirals[[9]])+
+  geom_spiral(spiral_tibble$spirals[[11]])+
+  geom_spiral(spiral_tibble$spirals[[13]])+
+  geom_spiral(spiral_tibble$spirals[[15]])+
+  geom_spiral(spiral_tibble$spirals[[17]])+
+  geom_spiral(spiral_tibble$spirals[[19]])+
+  geom_spiral(spiral_tibble$spirals[[21]])+
+  geom_spiral(spiral_tibble$spirals[[23]])+
+  coord_fixed() +
+  theme_void()
