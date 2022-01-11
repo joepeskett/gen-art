@@ -1,9 +1,8 @@
 ## Circles and Trigonometry
 library(tidyverse)
 library(ggforce)
-library(bezier)
-library(circular)
 library(ggplot2)
+library(tibble)
 
 
 #' @title partial_circles
@@ -112,26 +111,27 @@ build_circle_frame <- function(num_circles = 10,
 #====================== Plotting Tests =============
 
 
-output1 <- build_circle_frame(num_circles = 20, mean_rad = 50,
-                              seq_min = 0, seq_max = 3*pi, seq_length = 3000)
+output1 <- build_circle_frame(num_circles = 15, mean_rad = 50,
+                              seq_min = 0, seq_max = 3*pi, seq_length = 5000, partial_fun = partial_circles)
 
-output2 <- build_circle_frame(num_circles = 20, mean_rad = 15, 
-                              seq_min = pi*0.8, seq_max = 4.2*pi, seq_length = 1000,
-                              x_fun = tail(output1$x,1), y_fun = tail(output1$y,1))
+output2 <- build_circle_frame(num_circles = 35, mean_rad = 15, 
+                              seq_min = pi*0.8, seq_max = 4.2*pi, seq_length = 5000,
+                              x_fun = tail(output1$x,1), y_fun = tail(output1$y,1), partial_fun = partial_circles)
 
 output3 <- build_circle_frame(num_circles = 20, mean_rad = 40, 
-                              seq_min = 0, seq_max = pi*1, seq_length = 50,
-                              x_fun = tail(output2$x, 1), y_fun = tail(output2$y, 1))
+                              seq_min = 0, seq_max = pi*1, seq_length = 5000,
+                              x_fun = tail(output2$x, 1), y_fun = tail(output2$y, 1), partial_fun = partial_circles)
 output4 <- build_circle_frame(num_circles = 20, mean_rad = 30,
-                              seq_min = pi*2, seq_max = pi*7, seq_length = 500,
-                              x_fun = tail(output3$x, 1), y_fun = tail(output3$y, 1))
+                              seq_min = pi*2, seq_max = pi*7, seq_length = 5000,
+                              x_fun = tail(output3$x, 1), y_fun = tail(output3$y, 1), partial_fun = partial_circles)
 
-output5 <- build_circle_frame(num_circles = 20, mean_rad = 40,
-                              seq_min = pi*2, seq_max = pi*5, seq_length = 500,
-                              x_fun = tail(output4$x, 1), y_fun = tail(output4$y, 1))
-output6 <- build_circle_frame(num_circles = 15, mean_rad = 35,
-                              seq_min = pi*2, seq_max = pi*6, seq_length = 500,
-                              x_fun = tail(output5$x, 1), y_fun = tail(output5$y, 1))
+output5 <- build_circle_frame(num_circles = 35, mean_rad = 18,
+                              seq_min = pi*2, seq_max = pi*5, seq_length = 5000,
+                              x_fun = tail(output4$x, 1), y_fun = tail(output4$y, 1), partial_fun = partial_circles)
+output6 <- build_circle_frame(num_circles = 15, mean_rad = 25,
+                              seq_min = pi*2, seq_max = pi*6, seq_length = 5000,
+                              x_fun = tail(output5$x, 1), y_fun = tail(output5$y, 1), partial_fun = partial_circles)
+
 
 ggplot()+
   geom_path(data = output1, mapping = aes(x=x, 
@@ -251,3 +251,4 @@ ggplot()+
   geom_spiral(spiral_tibble$spirals[[23]])+
   coord_fixed() +
   theme_void()
+
